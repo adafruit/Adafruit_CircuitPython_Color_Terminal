@@ -37,18 +37,8 @@ or individual libraries can be installed using
 `circup <https://github.com/adafruit/circup>`_.
 
 
-
-.. todo:: Describe the Adafruit product this library works with. For PCBs, you can also add the
-image from the assets folder in the PCB's GitHub repo.
-
-`Purchase one from the Adafruit shop <http://www.adafruit.com/products/>`_
-
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
 
 On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
 PyPI <https://pypi.org/project/adafruit-circuitpython-color-terminal/>`_.
@@ -99,8 +89,52 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    import supervisor
+    from displayio import Group
+    from terminalio import FONT
+
+    from adafruit_color_terminal import ColorTerminal
+
+    main_group = Group()
+    display = supervisor.runtime.display
+    font_bb = FONT.get_bounding_box()
+    screen_size = (display.width // font_bb[0], display.height // font_bb[1])
+
+    terminal = ColorTerminal(FONT, screen_size[0], screen_size[1])
+    main_group.append(terminal.tilegrid)
+
+    black = chr(27) + "[30m"
+    red = chr(27) + "[31m"
+    green = chr(27) + "[32m"
+    yellow = chr(27) + "[33m"
+    blue = chr(27) + "[34m"
+    magenta = chr(27) + "[35m"
+    cyan = chr(27) + "[36m"
+    white = chr(27) + "[37m"
+    reset = chr(27) + "[0m"
+
+
+    message = f"Hello {green}World{reset} {yellow}ANSI\n"
+    terminal.write(message)
+    print(message, end="")
+
+    message = f"{magenta}Terminal {red}Colors{reset}"
+    terminal.write(message)
+    print(message)
+
+    display.root_group = main_group
+
+    print(terminal.cursor_x, terminal.cursor_y)
+
+    move_cursor = chr(27) + "[10;10H"
+    terminal.write(f" Something {move_cursor}{cyan} Else{reset}")
+    print(f" Something {move_cursor}{cyan} Else{reset}")
+
+    while True:
+        pass
+
 
 Documentation
 =============
