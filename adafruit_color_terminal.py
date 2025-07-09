@@ -219,8 +219,6 @@ class ColorTerminal:
             ):
                 print("playing beep")
                 self.audio_interface.play(self.beep_wave)
-                # while self.audio_interface.playing:
-                #     pass
             return
 
         idx = 0
