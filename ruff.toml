@@ -94,7 +94,6 @@ ignore = [
     "PLW1514",  # unspecified-encoding
     "PLR0913", # too many args
     "PLR0917", # too many positional args
-    "PLR6301", # method could be function
 
 ]
 

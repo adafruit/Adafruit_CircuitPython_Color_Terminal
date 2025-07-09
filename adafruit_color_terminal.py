@@ -117,7 +117,8 @@ class ColorTerminal:
             beep_wave_file = open(bell_audio_file, "rb")
             self.beep_wave = WaveFile(beep_wave_file)
 
-    def parse_ansi_colors(self, text):
+    @staticmethod
+    def parse_ansi_colors(text):
         """
         Parse ANSI color escape codes from a string.
 
@@ -205,7 +206,7 @@ class ColorTerminal:
 
         :param s: The string to write.
         """
-        clean_message, color_map = self.parse_ansi_colors(s)
+        clean_message, color_map = ColorTerminal.parse_ansi_colors(s)
 
         ordered_color_change_indexes = sorted(color_map.keys())
         cur_change_index = 0
