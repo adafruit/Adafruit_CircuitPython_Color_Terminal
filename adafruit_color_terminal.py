@@ -5,7 +5,8 @@
 `adafruit_color_terminal`
 ================================================================================
 
-Extension of supports ANSI color escapes for subsets of text
+Extension of supports ANSI color escapes for subsets of text and optionally the
+ASCII bell escape code.
 
 
 * Author(s): Tim Cocks
@@ -28,6 +29,7 @@ Implementation Notes
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Color_Terminal.git"
 
+from audiocore import WaveFile
 from displayio import Palette, TileGrid
 from terminalio import Terminal
 from tilepalettemapper import TilePaletteMapper
@@ -63,9 +65,20 @@ class ColorTerminal:
     :param height: The height of the terminal in characters.
     :param custom_palette: A custom palette of colors to use instead of the default ones.
       Must contain at least 9 colors.
+    :param audio_interface: The audio interface to use for playing ASCII bell escape codes.
+    :param bell_audio_file: The wave audio file to use for the ASCII bell escape codes.
+      Defaults to beep.wav
     """
 
-    def __init__(self, font, width, height, custom_palette=None):
+    def __init__(
+        self,
+        font,
+        width,
+        height,
+        custom_palette=None,
+        audio_interface=None,
+        bell_audio_file="/beep.wav",
+    ):
         if custom_palette is None:
             self.terminal_palette = Palette(9)
             self.terminal_palette[0] = 0x000000
@@ -99,8 +112,12 @@ class ColorTerminal:
 
         self.cur_color_mapping = [0, 1]
 
-    @staticmethod
-    def parse_ansi_colors(text):
+        self.audio_interface = audio_interface
+        if audio_interface is not None:
+            beep_wave_file = open(bell_audio_file, "rb")
+            self.beep_wave = WaveFile(beep_wave_file)
+
+    def parse_ansi_colors(self, text):
         """
         Parse ANSI color escape codes from a string.
 
@@ -188,13 +205,22 @@ class ColorTerminal:
 
         :param s: The string to write.
         """
-        clean_message, color_map = ColorTerminal.parse_ansi_colors(s)
+        clean_message, color_map = self.parse_ansi_colors(s)
 
         ordered_color_change_indexes = sorted(color_map.keys())
         cur_change_index = 0
 
         if not color_map:
             self.terminal.write(s)
+            if (
+                "\x07" in s
+                and self.audio_interface is not None
+                and not self.audio_interface.playing
+            ):
+                print("playing beep")
+                self.audio_interface.play(self.beep_wave)
+                # while self.audio_interface.playing:
+                #     pass
             return
 
         idx = 0
@@ -222,6 +248,12 @@ class ColorTerminal:
 
             self.apply_color(cur_slice)
             self.terminal.write(cur_slice)
+            if (
+                "\x07" in cur_slice
+                and self.audio_interface is not None
+                and not self.audio_interface.playing
+            ):
+                self.audio_interface.play(self.beep_wave)
 
         # index after last can be in the color map if color code is last thing in string
         if idx in color_map:
